@@ -41,6 +41,8 @@ def witcherify_monster():
         average_lvl = sum(level_inputs) / len(level_inputs)
         average_lvl = round(average_lvl)
         cr_out = average_lvl+3
+        if cr_out > 20:
+            cr_out = 20
         print("Your group is made up of players that are levels : ", level_inputs,
               "\nThat means the average level is {}".format(average_lvl),
               "\nThe witcherified monster should be CR: {}".format(cr_out))
@@ -50,7 +52,8 @@ def witcherify_monster():
         #Continue with more options later on using the user interface
 
     elif int(group_in) > 16:
-        print("This function does not support party sizes of that size")
+        print("This function does not support party sizes of that size, starting again, please ensure your group is less than ")
+        witcherify_monster()
 
     else:
         print("This is an invalid input, please ensure the input is numeric and above 1")
@@ -64,38 +67,56 @@ def mutate_monster(monster):
     invulnerability = []
     monster["hp"] = int(monster["hp"]) / 2
     num_immunity = round(int(monster["cr"]) / 3)
+    if num_immunity >= len(dnd_5e_damage) / 2:
+        num_immunity = len(dnd_5e_damage) - 6
+    print("Immunity: ", num_immunity)
     num_resistance = None
     num_vulnerabilites = None
     if int(monster["cr"]) < 9:
         num_resistance = round(int(monster["cr"]))
-        num_vulnerabilites = np.random.randint(1, 2)
-    else:
-        num_resistance = round(int(monster["cr"]) - 2)
         num_vulnerabilites = np.random.randint(1, 3)
+    elif int(monster["cr"] < 14):
+        num_resistance = round(int(monster["cr"]) - 3)
+        num_vulnerabilites = np.random.randint(2, 5)
+    else:
+        num_resistance = round(int(monster["cr"]) - 3)
+        num_vulnerabilites = np.random.randint(2, 5)
+        if num_resistance >= len(dnd_5e_damage):
+            num_resistance = len(dnd_5e_damage) - 5
     print(
         "Because of the creatures strength, mutation or otherwise ungodly powers, it has gained {0} immunities and {1} resistances!".
         format(num_immunity, num_resistance))
     print("In addition, the monster has become vulnerable to {} types of damage".format(num_vulnerabilites))
+    if int(monster["cr"]) >= 10:
+        print("The creatures inherent strength may fights back some of the mutations ...")
     #for loops that add the resis, invun, and vulner
     dmg_reduced = dnd_5e_damage
-    for i in range(num_resistance):
-        x = np.random.randint(0, len(dmg_reduced) -1)
-        resistance_type = dmg_reduced[x]
-        dmg_reduced.pop(x)
-        if resistance_type not in resistance:
-            resistance.append(resistance_type)
-    for i in range(num_vulnerabilites):
-        x = np.random.randint(0, len(dmg_reduced) -1)
-        vulnerability_type = dmg_reduced[x]
-        dmg_reduced.pop(x)
-        if vulnerability_type not in resistance or vulnerabilities:
-            vulnerabilities.append(vulnerability_type)
-    for i in range(num_immunity):
-        x = np.random.randint(0, len(dmg_reduced) -1)
-        invulnerability_type = dmg_reduced[x]
-        dmg_reduced.pop(x)
-        if invulnerability_type not in resistance or vulnerabilities or invulnerability:
-            invulnerability.append(invulnerability_type)
+    try:
+        for i in range(num_resistance):
+
+            x = np.random.randint(0, len(dmg_reduced) -1)
+            resistance_type = dmg_reduced[x]
+            dmg_reduced.pop(x)
+            if resistance_type not in resistance:
+                resistance.append(resistance_type)
+
+        dmg_reduced = dnd_5e_damage
+        for x in range(num_vulnerabilites):
+            g = np.random.randint(0, len(dmg_reduced) -1)
+            vulnerability_type = dmg_reduced[g]
+            dmg_reduced.pop(g)
+            if vulnerability_type not in resistance or vulnerabilities:
+                vulnerabilities.append(vulnerability_type)
+        dmg_reduced = dnd_5e_damage
+        for e in range(num_immunity):
+            p = np.random.randint(0, len(dmg_reduced))
+            invulnerability_type = dmg_reduced[p]
+            dmg_reduced.pop(p)
+            if invulnerability_type not in resistance or vulnerabilities or invulnerability:
+                invulnerability.append(invulnerability_type)
+    except:
+        pass
+
 
 
 
@@ -112,11 +133,16 @@ def mutate_monster(monster):
 
 
 def refine_monster(cr_in):
-    #This function aims to choose a random monster based on the CR set above
-    df_copy = pd.read_csv("cleaned_kfc_monstercopy.csv") #Uses standard dev to create a more relevant df
-    df_refined = df_copy[round(df_copy["cr"]) == cr_in]
-    df_refined = df_refined.drop(df_refined[df_refined["legendary"].values == "legendary"].index)
-    df_refined = df_refined.drop(df_refined[df_refined["lair"].values == "lair"].index)
+    df_copy = pd.read_csv("cleaned_kfc_monstercopy.csv")  # Uses standard dev to create a more relevant df
+    if cr_in < 18:
+        #This function aims to choose a random monster based on the CR set above
+        df_refined = df_copy[round(df_copy["cr"]) == cr_in]
+        df_refined = df_refined.drop(df_refined[df_refined["legendary"].values == "legendary"].index)
+        df_refined = df_refined.drop(df_refined[df_refined["lair"].values == "lair"].index)
+    elif cr_in > 19:
+        df_refined = df_copy[round(df_copy["cr"]) >= cr_in]
+        df_refined = df_refined.drop(df_refined[df_refined["legendary"].values == "legendary"].index)
+        df_refined = df_refined.drop(df_refined[df_refined["lair"].values == "lair"].index)
 
     monster_list = df_refined.index.tolist()
     while len(monster_list) > 3:
@@ -142,6 +168,7 @@ def choose_monster(df_refined, monster_list, monster_selections):
 
 
 def refine_selections(df_refined, monster_list, monster_selections):
+
     for i in range(len(monster_list)):
         monster_row = df_refined[df_refined.index == monster_list[i]]
         monster_selections.append("A {0} is a CR {1} monster with {2} hp that lives in the: {3}".format
