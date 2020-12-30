@@ -121,7 +121,7 @@ def mutate_monster(monster):
 
 
 
-
+    #TODO: Make a better UI in here
     print("The mutated {0} - has become resistant to the following types of damage\n{1}\nAnd has become immune to the following types of damage {2}"
     "\nAnd has become vulnerable to the following types of damage {3}".format(monster["name"].values, resistance, invulnerability, vulnerabilities))
     monster["resistance"] = pd.Series([resistance])
