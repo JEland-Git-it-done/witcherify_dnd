@@ -69,9 +69,9 @@ def mutate_monster(monster):
     num_immunity = round(int(monster["cr"]) / 3)
     if num_immunity >= len(dnd_5e_damage) / 2:
         num_immunity = len(dnd_5e_damage) - 6
-    print("Immunity: ", num_immunity)
     num_resistance = None
     num_vulnerabilites = None
+
     if int(monster["cr"]) < 9:
         num_resistance = round(int(monster["cr"]))
         num_vulnerabilites = np.random.randint(1, 3)
@@ -87,7 +87,7 @@ def mutate_monster(monster):
         "Because of the creatures strength, mutation or otherwise ungodly powers, it has gained {0} immunities and {1} resistances!".
         format(num_immunity, num_resistance))
     print("In addition, the monster has become vulnerable to {} types of damage".format(num_vulnerabilites))
-    if int(monster["cr"]) >= 10:
+    if int(monster["cr"]) > 10:
         print("The creatures inherent strength may fights back some of the mutations ...")
     #for loops that add the resis, invun, and vulner
     dmg_reduced = dnd_5e_damage
@@ -153,7 +153,9 @@ def refine_monster(cr_in):
     monster_selections = []
     refine_selections(df_refined, monster_list, monster_selections)
     monster_selections = choose_monster(df_refined, monster_list, monster_selections)
-    print("Test", monster_selections)
+    print(type(monster_selections))
+    print(monster_selections["name"].values)
+    print("\n\nThe monster's name: ", monster_selections["name"].values, "\nEnvironment: ", monster_selections["environment"].values, "\nType: ", monster_selections["type"].values,"\nPage number and Source: ",monster_selections["pagenum"].values, monster_selections["src"].values, "\n")
 
     return monster_selections
 
